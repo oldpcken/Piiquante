@@ -1,13 +1,14 @@
-// MongoDB cluster pwd: EPitN5vUleBHxh7P
-// MongoDB connection: mongodb+srv://oldpcken:EPitN5vUleBHxh7P@cluster0.uowkhi1.mongodb.net/?retryWrites=true&w=majority
-
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require("dotenv");
 const userRoutes = require('./routes/user');
 
 const app = express();
+dotenv.config();
 
-mongoose.connect('mongodb+srv://oldpcken:EPitN5vUleBHxh7P@cluster0.uowkhi1.mongodb.net/?retryWrites=true&w=majority')
+const connectionString = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.uowkhi1.mongodb.net/?retryWrites=true&w=majority`
+
+mongoose.connect(connectionString)
     .then(() => {
         console.log('Sucessfully Connected to MongoDB Atlas!');  
     })
