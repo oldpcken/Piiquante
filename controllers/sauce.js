@@ -83,17 +83,15 @@ exports.modifySauce = (req, res, next) => {
                 });
             }
             if (req.file) {
-
                 req.body.sauce = JSON.parse(req.body.sauce);
                 const url = req.protocol + '://' + req.get('host');
                 const filename = oldSauce.imageUrl.split('/images/')[1];
                 fs.unlink('images/' + filename, () => {
-                    // if (error) {
-                    //     console.log(error);
-                    //     throw error;
-                    // }
+                    if (error) {
+                        console.log(error);
+                        throw error;
+                    }
                 });
-                
                 updatedSauce = {
                     _id: req.params.id,
                     userId: req.body.sauce.userId,
@@ -116,7 +114,6 @@ exports.modifySauce = (req, res, next) => {
                     heat: req.body.heat,                                          
                 };
             }
-            
             Sauce.updateOne({_id: req.params.id}, updatedSauce)
                 .then(() => {
                     res.status(201).json({
@@ -143,11 +140,11 @@ exports.deleteSauce = (req, res, next) => {
                     error: new Error('Sauce Not Found!')
                 });
             }
-            // if (req.sauce.userId !== req.auth) {
-            //     return res.status(403).json({
-            //         error: new Error('403: Unauthorized Request!')
-            //     })
-            // }
+            if (sauce.userId !== req.auth.userId) {
+                return res.status(403).json({
+                    error: new Error('403: Unauthorized Request!')
+                })
+            }
             const filename = sauce.imageUrl.split('/images/')[1];
             fs.unlink('images/' + filename, () => {
                 Sauce.deleteOne({_id: req.params.id})
@@ -178,6 +175,10 @@ exports.likeOrDislikeSauce = (req, res, next) => {
     //     .then((sauce) => {
     //         req.body.sauce = JSON.parse(req.body.sauce);    
     //         const likeReqest = req.body.like
+    // create an empty update object
+    //         sauceUpdate = {
+    //             empty object goes here
+    //         } 
     //         sauce = {
     //             likes: sauce.likes,
     //             dislikes: sauce.dislikes,
@@ -212,23 +213,17 @@ exports.likeOrDislikeSauce = (req, res, next) => {
     //             remove userId from the userLikes array      
     //             remove userId from the userDislikes array         
     //         }
-    // Sauce.updateOne({_id: req.params.id}, sauceUpdate)
-    //     .then(() => {
-    //         res.status(201).json({
-    //             message: 'Like or Dislike Processed!'
+    //         Sauce.updateOne({_id: req.params.id}, sauceUpdate)
+    //             .then(() => {
+    //                 res.status(201).json({
+    //                     message: 'Like or Dislike Processed!'
+    //                 });
+    //             })
+    //             .catch((error) => {
+    //                 res.status(400).json({
+    //                 error: error
+    //             });
     //         });
-    //     })
-    //     .catch((error) => {
-    //         res.status(400).json({
-    //             error: error
-    //         });
-    //     });
     //     };
-    // });
-    
-    // create an empty update object
-    // sauceUpdate = {
-    //    empty object goes here
-    // } 
-       
+    // });       
 };
