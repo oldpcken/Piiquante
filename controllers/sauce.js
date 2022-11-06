@@ -74,12 +74,12 @@ exports.modifySauce = (req, res, next) => {
         .then((oldSauce) => {
             if (!oldSauce) {
                 return res.status (404).json({
-                    error: new Error('Sauce Not Found!')
+                    error: new Error('404: Sauce Not Found!')
                 });
             }
             if (oldSauce.userId !== req.auth.userId) {
-                return res.status (403).json({ 
-                    error: new Error('403: Unauthorized Request!')
+                return res.status (401).json({ 
+                    error: new Error('401: Unauthorized Request!')
                 });
             }
             if (req.file) {
@@ -137,12 +137,12 @@ exports.deleteSauce = (req, res, next) => {
         .then((sauce) => {
             if (!sauce) {
                 return res.status (404).json({
-                    error: new Error('Sauce Not Found!')
+                    error: new Error('404: Sauce Not Found!')
                 });
             }
             if (sauce.userId !== req.auth.userId) {
-                return res.status(403).json({
-                    error: new Error('403: Unauthorized Request!')
+                return res.status(401).json({
+                    error: new Error('401: Unauthorized Request!')
                 })
             }
             const filename = sauce.imageUrl.split('/images/')[1];
@@ -170,60 +170,90 @@ exports.deleteSauce = (req, res, next) => {
 
 // Like or dislike a sauce, track those users
 exports.likeOrDislikeSauce = (req, res, next) => {
+        
+    const userId = req.body.userId;
+    const likeRequest = req.body.like;
     
-    // Sauce.findOne({ _id: req.params.id })
-    //     .then((sauce) => {
-    //         req.body.sauce = JSON.parse(req.body.sauce);    
-    //         const likeReqest = req.body.like
-    // create an empty update object
-    //         sauceUpdate = {
-    //             empty object goes here
-    //         } 
-    //         sauce = {
-    //             likes: sauce.likes,
-    //             dislikes: sauce.dislikes,
-    //             usersLiked: sauce.usersLiked,
-    //             usersDisliked: sauce.usersDisliked
-    //         }      
-    //         if (!sauce) {
-    //             return res.status (404).json({
-    //                 error: new Error('Sauce not found!')
-    //             });
-    //         }
-    //         if (sauce.userId !== req.auth.userId) {
-    //             return res.status(403).json({
-    //                 error: new Error('403: unauthorized request')
-    //             });
-    //         }
-    // go through a conditional to add or remove likes and userIds from the arrays
-    //         if (likeRequest === 1) {
-    //          *  add 1 to req.body.likes count
-    //             req.body.likes++
-    //          *  add userId to the userLikes array
-    //             push.req.body.usersLiked(usersLiked);    
-    //         }
-    //         if (likeRequest === -1) {
-    //           * add 1 to req.body.disLikes count
-    //             req.body.dislikes++
-    //           * add userId to the userDislikes array    
-    //             push.req.body.usersDisliked(usersDisliked);        
-    //         }
-    //         if (likeRequest === 0) {
-    //             subtract 1 from likes or dislikes
-    //             remove userId from the userLikes array      
-    //             remove userId from the userDislikes array         
-    //         }
-    //         Sauce.updateOne({_id: req.params.id}, sauceUpdate)
-    //             .then(() => {
-    //                 res.status(201).json({
-    //                     message: 'Like or Dislike Processed!'
-    //                 });
-    //             })
-    //             .catch((error) => {
-    //                 res.status(400).json({
-    //                 error: error
-    //             });
-    //         });
+    Sauce.findOne({ _id: req.params.id})
+        .then((oldSauce) => {
+            if (!oldSauce) {
+                return res.status (404).json({
+                    error: new Error('404: Sauce Not Found!')
+                });
+            }
+            console.log('old found sauce is ', oldSauce);
+
+            console.log('req-body is ', req.body); 
+
+            // console.log('new sauce is ', Sauce);
+            // const sauceObj = req.body.sauce;
+            // console.log('sauceObj is ', sauceObj);
+            // req.body.sauce = JSON.parse(req.body.sauce);
+
+            console.log('the like request is ', likeRequest);
+
+            // create update object with current sauce values
+            sauceUpdate = {
+                likes: oldSauce.likes,
+                dislikes: oldSauce.dislikes,
+                usersLiked: oldSauce.usersLiked,
+                usersDisliked: oldSauce.usersDisliked
+            };
+            
+            const userAlreadyLiked = oldSauce.usersLiked.includes(userId);
+            const userAlreadyDisliked = oldSauce.usersDisliked.includes(userId);
+
+            console.log('likes = ', oldSauce.likes);
+            console.log('dislikes = ', oldSauce.dislikes);
+            console.log('users liked array: ', oldSauce.usersLiked);
+            console.log('users disliked array: ', oldSauce.usersDisliked);
+
+            if (likeRequest < -1 || likeRequest > 1) {
+                return res.status(400).json({ 
+                    message: 'Like Request is Invalid!'
+                });
+            }
+
+            // go through a conditional to add or remove likes and userIds from the arrays
+            if (likeRequest === 1 && !userAlreadyLiked) {
+                sauceUpdate.likes++;                  // add 1 to likes count
+                sauceUpdate.usersLiked.push(userId);  // add userId to the userLikes array
+             }
+            if (likeRequest === -1 && !userAlreadyDisliked) {
+                sauceUpdate.dislikes++;                  // add 1 to disLikes count
+                sauceUpdate.usersDisliked.push(userId);  // add userId to the userDislikes array         
+            }
+            if (likeRequest === 0) {
+                // remove userId from the userLikes array if there & subtract 1 from likes 
+                    if (sauceUpdate.usersLiked.includes(userId)) {
+                        sauceUpdate.usersLiked.pull(userId);
+                        sauceUpdate.likes--;
+                    }
+                // remove userId from the userDislikes array if there & subtract 1 from dislikes
+                    if (sauceUpdate.usersDisliked.includes(userId)) {
+                        sauceUpdate.usersDisliked.pull(userId);
+                        sauceUpdate.dislikes--;
+                    }  
+            }
+            Sauce.updateOne({_id: req.params.id}, sauceUpdate)
+                .then(() => {
+                    res.status(201).json({
+                        message: 'Like or Dislike Processed!'
+                    });
+                })
+                .catch((error) => {
+                    res.status(400).json({
+                    error: error
+                });
+            });
+        })
+        .catch((error) => {
+
+            console.log(error);
+            
+            res.status(400).json({
+                error: error
+            });
     //     };
-    // });       
+    });       
 };
