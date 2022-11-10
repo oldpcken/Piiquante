@@ -1,4 +1,4 @@
-// /models/user.js
+// in /models/user.js
 
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');

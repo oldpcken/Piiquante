@@ -1,9 +1,10 @@
-// /controllers/user.js
+// in /controllers/user.js
 
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// Create New Users
 exports.signup = (req, res, next) => {
     
     bcrypt.hash(req.body.password, 10)
@@ -27,6 +28,7 @@ exports.signup = (req, res, next) => {
         });
 };
 
+// Login Existing Users
 exports.login = (req, res, next) => {
 
     User.findOne({ email: req.body.email })

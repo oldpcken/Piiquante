@@ -1,3 +1,5 @@
+// in /models/sauce.js
+
 const mongoose = require('mongoose');
 
 const sauceSchema = mongoose.Schema({

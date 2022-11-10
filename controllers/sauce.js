@@ -1,9 +1,9 @@
-// in controllers/sauce.js
+// in /controllers/sauce.js
 
 const Sauce = require('../models/sauce');
 const fs = require('fs');
 
-// Retrieve All of the Sauces
+// Get All Sauces
 exports.getAllSauces = (req, res, next) => {
 
     Sauce.find()
@@ -17,13 +17,11 @@ exports.getAllSauces = (req, res, next) => {
         });
 };
 
-// Create a sauce for the database
+// Create a Sauce
 exports.createSauce = (req, res, next) => {
 
     const url = req.protocol + '://' + req.get('host');
-
-    console.log(url);
-
+    
     req.body.sauce = JSON.parse(req.body.sauce);
 
     const sauce = new Sauce({
@@ -35,8 +33,6 @@ exports.createSauce = (req, res, next) => {
         imageUrl: url + '/images/' + req.file.filename,
         heat: req.body.sauce.heat 
     });
-
-    console.log(sauce);
 
     sauce.save()
         .then(() => {
@@ -51,7 +47,7 @@ exports.createSauce = (req, res, next) => {
         });
 };
 
-// Select one sauce
+// Get One Sauce
 exports.getOneSauce = (req, res, next) => {
 
     Sauce.findOne({_id: req.params.id})
@@ -65,7 +61,7 @@ exports.getOneSauce = (req, res, next) => {
         });
 };
 
-// Modify a sauce with or without an image change
+// Modify Sauce With or Without Image Change
 exports.modifySauce = (req, res, next) => {
     
     let updatedSauce = new Sauce({_id: req.params._id});
@@ -86,7 +82,7 @@ exports.modifySauce = (req, res, next) => {
                 req.body.sauce = JSON.parse(req.body.sauce);
                 const url = req.protocol + '://' + req.get('host');
                 const filename = oldSauce.imageUrl.split('/images/')[1];
-                fs.unlink('images/' + filename, () => {
+                fs.unlink('images/' + filename, (error) => {
                     if (error) {
                         console.log(error);
                         throw error;
@@ -125,12 +121,11 @@ exports.modifySauce = (req, res, next) => {
                         error: error
                     });
                 });
-        });
-        
+        });        
        
 };
 
-// User owned delete of a sauce
+// Delete Sauce
 exports.deleteSauce = (req, res, next) => {
 
     Sauce.findOne({_id: req.params.id})
@@ -168,7 +163,7 @@ exports.deleteSauce = (req, res, next) => {
         });
 };
 
-// Like or dislike a sauce, track those users
+// Like or Dislike Sauce, Track Users
 exports.likeOrDislikeSauce = (req, res, next) => {
         
     const userId = req.body.userId;
@@ -181,17 +176,6 @@ exports.likeOrDislikeSauce = (req, res, next) => {
                     error: new Error('404: Sauce Not Found!')
                 });
             }
-            console.log('old found sauce is ', oldSauce);
-
-            console.log('req-body is ', req.body); 
-
-            // console.log('new sauce is ', Sauce);
-            // const sauceObj = req.body.sauce;
-            // console.log('sauceObj is ', sauceObj);
-            // req.body.sauce = JSON.parse(req.body.sauce);
-
-            console.log('the like request is ', likeRequest);
-
             // create update object with current sauce values
             sauceUpdate = {
                 likes: oldSauce.likes,
@@ -200,28 +184,23 @@ exports.likeOrDislikeSauce = (req, res, next) => {
                 usersDisliked: oldSauce.usersDisliked
             };
             
-            const userAlreadyLiked = oldSauce.usersLiked.includes(userId);
-            const userAlreadyDisliked = oldSauce.usersDisliked.includes(userId);
-
-            console.log('likes = ', oldSauce.likes);
-            console.log('dislikes = ', oldSauce.dislikes);
-            console.log('users liked array: ', oldSauce.usersLiked);
-            console.log('users disliked array: ', oldSauce.usersDisliked);
-
             if (likeRequest < -1 || likeRequest > 1) {
                 return res.status(400).json({ 
                     message: 'Like Request is Invalid!'
                 });
             }
 
-            // go through a conditional to add or remove likes and userIds from the arrays
+            const userAlreadyLiked = oldSauce.usersLiked.includes(userId);
+            const userAlreadyDisliked = oldSauce.usersDisliked.includes(userId);
+
+            // go through conditionals to add or remove likes, add or remove userids from the arrays
             if (likeRequest === 1 && !userAlreadyLiked) {
-                sauceUpdate.likes++;                  // add 1 to likes count
-                sauceUpdate.usersLiked.push(userId);  // add userId to the userLikes array
+                sauceUpdate.likes++;                         // add 1 to likes count
+                sauceUpdate.usersLiked.push(userId);         // add userId to the userLikes array
              }
             if (likeRequest === -1 && !userAlreadyDisliked) {
-                sauceUpdate.dislikes++;                  // add 1 to disLikes count
-                sauceUpdate.usersDisliked.push(userId);  // add userId to the userDislikes array         
+                sauceUpdate.dislikes++;                      // add 1 to disLikes count
+                sauceUpdate.usersDisliked.push(userId);      // add userId to the userDislikes array         
             }
             if (likeRequest === 0) {
                 // remove userId from the userLikes array if there & subtract 1 from likes 

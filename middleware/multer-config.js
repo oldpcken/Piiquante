@@ -1,4 +1,4 @@
-// /middleware/multer-config.js
+// in /middleware/multer-config.js
 
 const multer = require('multer');
 

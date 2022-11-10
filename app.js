@@ -1,3 +1,5 @@
+// in /backend/app.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -11,6 +13,7 @@ dotenv.config();
 
 const connectionString = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.uowkhi1.mongodb.net/?retryWrites=true&w=majority`
 
+// Log into the MongoDB database 
 mongoose.connect(connectionString)
     .then(() => {
         console.log('Sucessfully Connected to MongoDB Atlas!');  
@@ -22,6 +25,7 @@ mongoose.connect(connectionString)
   
 app.use(express.json());
 
+// set up cross-origin resource sharing
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
